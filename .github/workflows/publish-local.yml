@@ -1,0 +1,37 @@
+name: Publish local playlist
+
+# 由本机 Docker 生成结果后，把 local-output 分支上的文件发布到 GitHub Pages
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-local
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: local-output
+      - uses: actions/configure-pages@v5
+      - name: Prepare artifact
+        run: |
+          mkdir -p public
+          cp result.txt result.m3u public/
+          touch public/.nojekyll
+          ls -la public
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: public
+      - id: deployment
+        uses: actions/deploy-pages@v4
